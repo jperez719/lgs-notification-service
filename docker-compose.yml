@@ -1,5 +1,5 @@
 services:
-  postgres:
+  notification-postgres:
     image: postgres:16
     container_name: notification-service-postgres
     environment:
@@ -10,11 +10,34 @@ services:
       - "5433:5432"
     volumes:
       - notification_pgdata:/var/lib/postgresql/data
+    networks:
+      - store-crm-shared
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d notification_db"]
       interval: 5s
       timeout: 5s
       retries: 5
 
+  app:
+    build: .
+    container_name: notification-service-app
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+    ports:
+      - "8081:8081"
+    depends_on:
+      notification-postgres:
+        condition: service_healthy
+    networks:
+      - store-crm-shared
+
 volumes:
   notification_pgdata:
+
+networks:
+  store-crm-shared:
+    external: true
