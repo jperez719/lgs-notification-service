@@ -4,6 +4,7 @@ import com.jperez.notificationservice.config.RabbitMQConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -22,6 +23,10 @@ public class CreditTransactionNotificationListener {
     @RabbitListener(queues = RabbitMQConfig.QUEUE)
     public void handleCreditTransactionApplied(Map<String, Object> payload) {
         log.info("Received credit-transaction.applied event: {}", payload);
-        notificationService.recordAndSend(payload);
+        try {
+            notificationService.recordAndSend(payload);
+        } catch (DataIntegrityViolationException e) {
+            log.info("Duplicate event (unique constraint), ignoring: {}", payload.get("transactionId"));
+        }
     }
 }

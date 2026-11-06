@@ -25,6 +25,13 @@ public class NotificationService {
         UUID tenantId = UUID.fromString((String) payload.get("tenantId"));
         UUID customerId = UUID.fromString((String) payload.get("customerId"));
         UUID transactionId = UUID.fromString((String) payload.get("transactionId"));
+
+        // Idempotency fast path: skip if we've already handled this transaction
+        if (notificationRepository.existsByTransactionId(transactionId)) {
+            log.info("Duplicate event for transactionId={}, skipping", transactionId);
+            return;
+        }
+
         String type = (String) payload.get("type");
         Object amount = payload.get("amount");
         Object resultingBalance = payload.get("resultingBalance");
