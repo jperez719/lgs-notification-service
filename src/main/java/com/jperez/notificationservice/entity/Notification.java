@@ -20,7 +20,7 @@ public class Notification {
     @Column(name = "customer_id", nullable = false)
     private UUID customerId;
 
-    @Column(name = "transaction_id", nullable = false)
+    @Column(name = "transaction_id", nullable = false, unique = true)
     private UUID transactionId;
 
     @Column(name = "message", nullable = false, columnDefinition = "TEXT")
